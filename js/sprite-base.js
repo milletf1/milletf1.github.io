@@ -1,17 +1,3 @@
-//base properties
-// xPos
-// yPos
-// moveSpeed
-// bgColor (this could be an image)
-// size
-
-//base functions
-// move
-// draw
-// getXPos
-// getYPos
-// getSize
-// getMoveSpeed
 var SpriteFactory = (function () {
 
     var PLAYER_COLOUR   =   "rgba(255, 0, 0, 1)";
@@ -29,8 +15,17 @@ var SpriteFactory = (function () {
     _baseSprite.prototype.getXPos = function() {
         return this.xPos;
     };
+    
     _baseSprite.prototype.getYPos = function() {
         return this.yPos;
+    };
+
+    _baseSprite.prototype.setXPos = function(x) {
+        this.xPos = x;
+    };
+
+    _baseSprite.prototype.setYPos = function(y) {
+        this.yPos = y;
     };
 
     _baseSprite.prototype.getSize = function() {
@@ -58,17 +53,34 @@ var SpriteFactory = (function () {
 
     _movableSprite.prototype.getIsMoving = function () {
         return this.isMoving;
-    };
+    };  
 
-    _movableSprite.prototype.setMoveTarget = function(x, y) {
+    _movableSprite.prototype.setMove = function(x, y) {
         this.xTarget = x;
         this.yTarget = y;
-        this.isMoving = false;
+        this.isMoving = true;
     };
 
     _movableSprite.prototype.move = function() {
 
+        var deltaX = this.xTarget - this.xPos;
+        var deltaY = this.yTarget - this.yPos;
+
+        var dist = Math.sqrt(deltaX*deltaX+deltaY*deltaY);
+        
+        var velX = (deltaX/dist) * this.moveSpeed;
+        var velY = (deltaY/dist) * this.moveSpeed;
+
+        if(dist > this.size) {
+            this.xPos += velX;
+            this.yPos += velY;
+        }       
+        else {
+            this.isMoving = false;
+        }
+    
     };
+
 
     /**
      * Player sprite
