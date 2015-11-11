@@ -1,9 +1,13 @@
 (function() {
-    var PLAYER_START_X = 32;
-    var PLAYER_START_Y = 32;
+    var EDIBLE_POINT        = 10;
+    var CANVAS_WIDTH        = 800;
+    var CANVAS_HEIGHT       = 600;
+    var PLAYER_START_X      = 32;
+    var PLAYER_START_Y      = 32;
     var PLAYER_DEFAULT_MOVE = 12;
-    var SPRITE_SIZE = 8;
+    var SPRITE_SIZE         = 8;
     var gameInterval;
+    var edible;
     var player;
     var canvas;
     var ctx;
@@ -21,7 +25,19 @@
         
         function checkCollisions() {
             // check player collision against collection item
+            if(player.checkCollision(edible)) {
+                // todo: increment player points
+                generateEdible();
+            }
             // check player collision against meteors
+        }
+
+        function generateEdible() {
+        
+            var newX = Math.floor(Math.random() * ( CANVAS_WIDTH - (SPRITE_SIZE * 2) ) ) + SPRITE_SIZE;
+            var newY = Math.floor(Math.random() * ( CANVAS_HEIGHT - (SPRITE_SIZE * 2) ) ) + SPRITE_SIZE;
+
+            edible = SpriteFactory.createCollect(SPRITE_SIZE, newX, newY, EDIBLE_POINT);
         }
 
         function draw() {
@@ -32,6 +48,9 @@
 
             // draw player
             player.draw(ctx);
+
+            //draw edibles
+            edible.draw(ctx);
         }
 
         function gameLoop() {
@@ -53,10 +72,14 @@
             ctx = canvas.getContext('2d');
             canvas.addEventListener('click', canvasClickListener, false);
             // init player
-            player = SpriteFactory.createPlayer(PLAYER_DEFAULT_MOVE, SPRITE_SIZE, PLAYER_START_X, PLAYER_START_Y);
+            player = SpriteFactory.createPlayer(
+              PLAYER_DEFAULT_MOVE, SPRITE_SIZE, PLAYER_START_X, PLAYER_START_Y);
 
             // init timer
             gameInterval = window.setInterval(gameLoop, 50);
+
+            // init edible
+            generateEdible();
         }
         init();
     });

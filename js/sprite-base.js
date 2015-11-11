@@ -1,6 +1,7 @@
 var SpriteFactory = (function () {
 
-    var PLAYER_COLOUR   =   "rgba(255, 0, 0, 1)";
+    var PLAYER_COLOUR   = "rgba(255, 0, 0, 1)";
+    var EAT_COLOUR      = "rgba(0, 255, 0, 1)"; 
 
     /**
      * Base sprite
@@ -32,13 +33,33 @@ var SpriteFactory = (function () {
         return this.size;
     };
 
+    _baseSprite.prototype.checkCollision = function(otherSprite) {
+    
+        var dx = this.xPos - otherSprite.getXPos(),
+            dy = this.yPos - otherSprite.getYPos();
+        var dist = Math.sqrt(dx * dx + dy * dy);
+
+        return dist < this.size + otherSprite.getSize()
+    };
+
     _baseSprite.prototype.draw = function(ctx) {
         var path = new Path2D();
         path.arc(this.xPos, this.yPos, this.size, 0, Math.PI * 2, false);
         ctx.fillStyle = this.bgColor;
         ctx.fill(path);
     };
-    _baseSprite.prototype.constructor = _baseSprite; 
+    
+    
+    _baseSprite.prototype.constructor = _baseSprite;
+
+    /**
+     * Edible sprite
+     */
+    function _edibleSprite(size, xPos, yPos, pointValue) {
+        _baseSprite.call(this, EAT_COLOUR, size, xPos, yPos);
+        this.pointValue = pointValue;
+    };
+    _edibleSprite.prototype = Object.create(_baseSprite.prototype);
     /**
      * Movable sprite
      */
@@ -77,8 +98,7 @@ var SpriteFactory = (function () {
         }       
         else {
             this.isMoving = false;
-        }
-    
+        }    
     };
 
 
@@ -96,9 +116,13 @@ var SpriteFactory = (function () {
     var createPlayer = function(moveSpeed, size, xPos, yPos) {
         return new _playerSprite(moveSpeed, size, xPos, yPos);
     };
+    var createCollect = function(size, xPos, yPos, pointValue) {
+        return new _edibleSprite(size, xPos, yPos, pointValue);
+    };
+
     return {
         //createMeteor: createMeteor,
-        //createCollect: createCollect,
+        createCollect: createCollect,
         createPlayer: createPlayer      
     };
 })();
