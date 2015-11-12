@@ -2,6 +2,7 @@ var SpriteFactory = (function () {
 
     var PLAYER_COLOUR   = "rgba(255, 0, 0, 1)";
     var EAT_COLOUR      = "rgba(0, 255, 0, 1)"; 
+    var ENEMY_COLOUR    = "rgba(0, 0, 255, 1)";
 
     /**
      * Base sprite
@@ -101,7 +102,6 @@ var SpriteFactory = (function () {
         }    
     };
 
-
     /**
      * Player sprite
      */
@@ -109,6 +109,14 @@ var SpriteFactory = (function () {
         _movableSprite.call(this, moveSpeed, PLAYER_COLOUR, size, xPos, yPos);       
     };
     _playerSprite.prototype = Object.create(_movableSprite.prototype);
+
+    /**
+     * Enemy sprite
+     */
+    function _enemySprite(moveSpeed, size, xPos, yPos) {
+        _movableSprite.call(this, moveSpeed, ENEMY_COLOUR, size, xPos, yPos);
+    };
+    _enemySprite.prototype = Object.create(_movableSprite.prototype);
 
     /**
      * Factory
@@ -119,9 +127,12 @@ var SpriteFactory = (function () {
     var createCollect = function(size, xPos, yPos, pointValue) {
         return new _edibleSprite(size, xPos, yPos, pointValue);
     };
+    var createEnemy = function(moveSpeed, size, xPos, yPos) {
+        return new _enemySprite(moveSpeed, size, xPos, yPos);
+    };
 
     return {
-        //createMeteor: createMeteor,
+        createEnemy: createEnemy,
         createCollect: createCollect,
         createPlayer: createPlayer      
     };

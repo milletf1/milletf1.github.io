@@ -6,30 +6,86 @@
     var PLAYER_START_Y      = 32;
     var PLAYER_DEFAULT_MOVE = 12;
     var SPRITE_SIZE         = 8;
+    // start/end position of enemy sprites
+    var TOP                 = 0;
+    var RIGHT               = 1;
+    var BOT                 = 2;
+    var LEFT                = 3;
+
     var gameInterval;
     var edible;
+    var enemies;
     var player;
     var canvas;
     var ctx;
     $(document).ready(function() {
         
-        function updateSprites() {
-            // add/remove meteor if needed
 
-            // move player sprite
-            if(player.getIsMoving()) {
-                player.move();
-            }
-            // move meteors
-        }
+        function generateEnemy() {
         
-        function checkCollisions() {
-            // check player collision against collection item
-            if(player.checkCollision(edible)) {
-                // todo: increment player points
-                generateEdible();
+            var startSide = Math.floor(Math.random() * 4),
+                endSide = Math.floor(Math.random() * 4);
+
+            if(startSide === endSide) {
+                endSide = (Math.floor( (Math.random() * 3) + 1 )) % 4;
             }
-            // check player collision against meteors
+
+            var xStart = getEnemyXPos(startSide),
+                yStart = getEnemyYPos(startSide),
+                xEnd = getEnemyXPos(endSide),
+                yEnd = getEnemyYPos(endSide),
+                moveSpeed = getEnemySpeed();
+
+            var enemy = SpriteFactory.createEnemy(moveSpeed, SPRITE_SIZE, xStart, yStart);
+            enemy.setMove(xEnd, yEnd);
+            
+            return enemy;
+        }
+
+        function getEnemySpeed() {
+            return Math.floor(Math.random() * 8 + 4);
+        }
+    
+        function getEnemyXPos(posArgs) {
+            
+            var ret = null;
+
+            switch(posArgs) {
+                case TOP:
+                case BOT:
+                    ret = Math.floor(Math.random() * (CANVAS_WIDTH - SPRITE_SIZE) + (SPRITE_SIZE / 2));
+                    break;
+                case RIGHT:
+                    ret = SPRITE_SIZE / 2 + CANVAS_WIDTH;
+                    break;
+                case LEFT:
+                    ret = SPRITE_SIZE / 2 * -1;
+                    break;
+                default:
+                    break;
+            }
+            return ret;
+        }
+
+        function getEnemyYPos(posArgs) {
+            
+            var ret = null;
+
+            switch(posArgs) {
+                case TOP:
+                    ret = SPRITE_SIZE / 2 * -1;
+                    break;
+                case BOT:
+                    ret = SPRITE_SIZE / 2 + CANVAS_HEIGHT;
+                    break;
+                case LEFT:
+                case RIGHT:
+                    ret = Math.floor(Math.random() * (CANVAS_HEIGHT - SPRITE_SIZE) + (SPRITE_SIZE / 2));
+                    break;
+                default:
+                    break;
+            }
+            return ret;
         }
 
         function generateEdible() {
@@ -40,6 +96,40 @@
             edible = SpriteFactory.createCollect(SPRITE_SIZE, newX, newY, EDIBLE_POINT);
         }
 
+        function checkCollisions() {
+            // check player collision against collection item
+            if(player.checkCollision(edible)) {
+                // todo: increment player points
+                generateEdible();
+                enemies.push(generateEnemy());
+            }
+            // check player collision against meteors
+            enemies.forEach(function(enemy) {
+                if(enemy.checkCollision(player)) {
+                    console.log("player is kill");    
+                }
+            });
+        }
+
+        function updateSprites() {
+            // add/remove meteor if needed
+
+            // move player sprite
+            if(player.getIsMoving()) {
+                player.move();
+            }
+            // move enemies
+            for(var i = 0; i < enemies.length; i++) {
+
+                if(enemies[i].getIsMoving()) {
+                    enemies[i].move();
+                }
+                else {
+                    enemies[i] = generateEnemy();
+                }
+            }
+        }
+        
         function draw() {
 
             // draw background
@@ -49,8 +139,13 @@
             // draw player
             player.draw(ctx);
 
-            //draw edibles
+            // draw edibles
             edible.draw(ctx);
+            
+            // draw enemies
+            enemies.forEach(function(enemy) {
+                enemy.draw(ctx);
+            });
         }
 
         function gameLoop() {
@@ -80,6 +175,10 @@
 
             // init edible
             generateEdible();
+
+            // init enemies
+            enemies = [];
+            enemies.push(generateEnemy());
         }
         init();
     });
