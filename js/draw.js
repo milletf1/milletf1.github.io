@@ -2,8 +2,8 @@
     var EDIBLE_POINT        = 10;
     var CANVAS_WIDTH        = 800;
     var CANVAS_HEIGHT       = 600;
-    var PLAYER_START_X      = 32;
-    var PLAYER_START_Y      = 32;
+    var PLAYER_START_X      = 400;
+    var PLAYER_START_Y      = 300;
     var PLAYER_DEFAULT_MOVE = 12;
     var SPRITE_SIZE         = 8;
     // start/end position of enemy sprites

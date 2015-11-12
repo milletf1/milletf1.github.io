@@ -98,6 +98,19 @@ var SpriteFactory = (function () {
             this.yPos += velY;
         }       
         else {
+            
+            //normalise
+            var normX = velX / this.moveSpeed,
+                normY = velY / this.moveSpeed;
+           
+            // update distance
+            velX = normX * Math.round(dist);
+            velY = normY * Math.round(dist);
+
+            this.xPos += velX;
+            this.yPos += velY;
+
+            // move 
             this.isMoving = false;
         }    
     };
