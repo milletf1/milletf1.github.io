@@ -1,17 +1,29 @@
 (function() {
     var EDIBLE_POINT        = 10;
+    var POINT_DISPLAY_X     = 20;
+    var POINT_DISPLAY_Y     = 40;
     var CANVAS_WIDTH        = 800;
     var CANVAS_HEIGHT       = 600;
     var PLAYER_START_X      = 400;
     var PLAYER_START_Y      = 300;
     var PLAYER_DEFAULT_MOVE = 12;
     var SPRITE_SIZE         = 8;
+
+    var CANVAS_BG_COLOUR    = "white";
+    var POINTS_FONT_STYLE   = "30px Arial";
+    var POINTS_FONT_COLOR   = "black";
+    var END_GAME_FONT_STYLE = "30px Arial";
+
+    var IN_GAME_STATE       = 1;
+    var GAME_OVER_STATE     = 2;
+
     // start/end position of enemy sprites
     var TOP                 = 0;
     var RIGHT               = 1;
     var BOT                 = 2;
     var LEFT                = 3;
 
+    var gameState;
     var gameInterval;
     var edible;
     var enemies;
@@ -100,13 +112,14 @@
             // check player collision against collection item
             if(player.checkCollision(edible)) {
                 // todo: increment player points
+                player.incrementScore(edible.getPoints());
                 generateEdible();
                 enemies.push(generateEnemy());
             }
             // check player collision against meteors
             enemies.forEach(function(enemy) {
                 if(enemy.checkCollision(player)) {
-                    console.log("player is kill");    
+                    player.setIsAlive(false); 
                 }
             });
         }
@@ -129,12 +142,26 @@
                 }
             }
         }
-        
-        function draw() {
+        function drawPoints(points) {
+            ctx.fillStyle = POINTS_FONT_COLOR;
+            ctx.font = POINTS_FONT_STYLE;
+            ctx.textAlign="left";
+            ctx.fillText("" + points, POINT_DISPLAY_X, POINT_DISPLAY_Y);
+        }
+
+        function drawBackground() {
+
+            ctx.fillStyle = CANVAS_BG_COLOUR;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+ 
+        function drawInGameState() {
 
             // draw background
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+
+            // draw player points
+            drawPoints(player.getScore());
 
             // draw player
             player.draw(ctx);
@@ -148,30 +175,81 @@
             });
         }
 
+        function displayEndGame() { 
+
+            // draw background
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // draw Game Over            
+            ctx.fillStyle = "white";
+            ctx.font = "50px Arial";
+            ctx.textAlign="center";
+            ctx.fillText("Game Over", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 25);
+
+            // draw click to continue
+            ctx.font = "18px Arial";
+            ctx.fillText("Click to play again", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+            clearInterval(gameInterval);
+        }
         function gameLoop() {
-            // check if game still in progress
-            updateSprites();
-            checkCollisions();
-            draw();
+            
+            switch(gameState) {
+                /*
+                case GAME_OVER_STATE:
+                    displayEndGame();
+                    break;
+                */
+                case IN_GAME_STATE:
+                    inGameStateLoop();
+                    break;
+                default:
+                    break;
+            }
         }
 
+        
+        function inGameStateLoop() {
+            updateSprites();
+            checkCollisions();           
+            drawInGameState();
+            
+            if(player.getIsAlive() === false) {                
+                gameState = GAME_OVER_STATE;
+                displayEndGame();
+            }
+        };
+
         function canvasClickListener(event) {
-            var x = event.pageX - canvas.offsetLeft;
-            var y = event.pageY - canvas.offsetTop;
-            player.setMove(x, y);
+            switch(gameState) {
+                case IN_GAME_STATE:
+                    var x = event.pageX - canvas.offsetLeft;
+                    var y = event.pageY - canvas.offsetTop;
+                    player.setMove(x, y);
+                    break;
+                case GAME_OVER_STATE:
+                    initInGameState();
+                    break; 
+                default:
+                    break;
+            }
         }
 
         function init() {
+            
             // init canvas
             canvas = document.getElementById('canvas');        
             ctx = canvas.getContext('2d');
             canvas.addEventListener('click', canvasClickListener, false);
+            
+            initInGameState();
+        }
+
+        function initInGameState() {
             // init player
             player = SpriteFactory.createPlayer(
               PLAYER_DEFAULT_MOVE, SPRITE_SIZE, PLAYER_START_X, PLAYER_START_Y);
 
-            // init timer
-            gameInterval = window.setInterval(gameLoop, 50);
 
             // init edible
             generateEdible();
@@ -179,6 +257,11 @@
             // init enemies
             enemies = [];
             enemies.push(generateEnemy());
+
+            gameState = IN_GAME_STATE;
+
+            // init timer
+            gameInterval = setInterval(gameLoop, 50);
         }
         init();
     });

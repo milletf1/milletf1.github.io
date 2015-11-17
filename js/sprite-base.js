@@ -61,6 +61,9 @@ var SpriteFactory = (function () {
         this.pointValue = pointValue;
     };
     _edibleSprite.prototype = Object.create(_baseSprite.prototype);
+    _edibleSprite.prototype.getPoints = function() {
+        return this.pointValue;
+    };
     /**
      * Movable sprite
      */
@@ -119,15 +122,30 @@ var SpriteFactory = (function () {
      * Player sprite
      */
     function _playerSprite(moveSpeed, size, xPos, yPos) {
-        _movableSprite.call(this, moveSpeed, PLAYER_COLOUR, size, xPos, yPos);       
+        _movableSprite.call(this, moveSpeed, PLAYER_COLOUR, size, xPos, yPos);          this.points = 0;
+        this.isAlive = true;
     };
     _playerSprite.prototype = Object.create(_movableSprite.prototype);
 
+    _playerSprite.prototype.getScore = function() {
+        return this.points;
+    };
+    _playerSprite.prototype.getIsAlive = function() {
+        return this.isAlive;
+    };
+    _playerSprite.prototype.setIsAlive = function(aliveState) {
+        this.isAlive = aliveState;
+    };
+
+    _playerSprite.prototype.incrementScore = function(points) {
+        this.points += points;
+    };
+    
     /**
      * Enemy sprite
      */
     function _enemySprite(moveSpeed, size, xPos, yPos) {
-        _movableSprite.call(this, moveSpeed, ENEMY_COLOUR, size, xPos, yPos);
+        _movableSprite.call(this, moveSpeed, ENEMY_COLOUR, size, xPos, yPos);   
     };
     _enemySprite.prototype = Object.create(_movableSprite.prototype);
 
