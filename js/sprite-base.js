@@ -35,7 +35,7 @@ var SpriteFactory = (function () {
     };
 
     _baseSprite.prototype.checkCollision = function(otherSprite) {
-    
+   	// todo implement pixel collision 
         var dx = this.xPos - otherSprite.getXPos(),
             dy = this.yPos - otherSprite.getYPos();
         var dist = Math.sqrt(dx * dx + dy * dy);
@@ -70,9 +70,12 @@ var SpriteFactory = (function () {
     function _movableSprite(moveSpeed, bgColor, size, xPos, yPos) {
         _baseSprite.call(this, bgColor, size, xPos, yPos);
         this.moveSpeed = moveSpeed;
+	this.size = 48;
         this.xTarget = xPos;
         this.yTarget = yPos;
         this.isMoving = false;
+	this.xOffset = 0;
+	this.yOffset = 0;
     };
     _movableSprite.prototype = Object.create(_baseSprite.prototype);
 
@@ -81,8 +84,8 @@ var SpriteFactory = (function () {
     };  
 
     _movableSprite.prototype.setMove = function(x, y) {
-        this.xTarget = x;
-        this.yTarget = y;
+        this.xTarget = x + -this.xOffset;
+        this.yTarget = y + -this.yOffset;
         this.isMoving = true;
     };
 
@@ -96,7 +99,7 @@ var SpriteFactory = (function () {
         var velX = (deltaX/dist) * this.moveSpeed;
         var velY = (deltaY/dist) * this.moveSpeed;
 
-        if(dist > this.size) {
+        if(dist > this.moveSpeed) {
             this.xPos += velX;
             this.yPos += velY;
         }       
@@ -107,8 +110,8 @@ var SpriteFactory = (function () {
                 normY = velY / this.moveSpeed;
            
             // update distance
-            velX = normX * Math.round(dist);
-            velY = normY * Math.round(dist);
+            velX = normX * Math.floor(dist);
+            velY = normY * Math.floor(dist);
 
             this.xPos += velX;
             this.yPos += velY;
@@ -121,9 +124,15 @@ var SpriteFactory = (function () {
     /**
      * Player sprite
      */
-    function _playerSprite(moveSpeed, size, xPos, yPos) {
-        _movableSprite.call(this, moveSpeed, PLAYER_COLOUR, size, xPos, yPos);          this.points = 0;
+    function _playerSprite(moveSpeed, size, xPos, yPos, spriteImage) {
+        _movableSprite.call(this, moveSpeed, PLAYER_COLOUR, size, xPos, yPos);         
+ 	this.points = 0;
         this.isAlive = true;
+	this.spriteImg = spriteImage;	// todo: sort this out in base sprite
+//	this.spriteImg.src = "images/ship_base.svg";	
+	//todo real sprite size;
+	this.xOffset = size/2;
+	this.yOffset = size/2;
     };
     _playerSprite.prototype = Object.create(_movableSprite.prototype);
 
@@ -141,6 +150,25 @@ var SpriteFactory = (function () {
         this.points += points;
     };
     
+    _playerSprite.prototype.drawImg = function(ctx) {
+	ctx.save();
+
+	// set translate
+        var x = this.xPos + this.xOffset;
+        var y = this.yPos + this.yOffset;
+        ctx.translate(x , y);
+     
+        // set rotation
+        var deltaX = this.xTarget - this.xPos;
+        var deltaY = this.yTarget - this.yPos;
+        var rot = Math.atan2(deltaY, deltaX);
+     
+        ctx.rotate(rot);
+     
+        ctx.drawImage(this.spriteImg, -this.xOffset, -this.yOffset, this.size, this.size);	   
+	ctx.restore();
+    };
+    
     /**
      * Enemy sprite
      */
@@ -152,8 +180,8 @@ var SpriteFactory = (function () {
     /**
      * Factory
      */
-    var createPlayer = function(moveSpeed, size, xPos, yPos) {
-        return new _playerSprite(moveSpeed, size, xPos, yPos);
+    var createPlayer = function(moveSpeed, size, xPos, yPos, shipImage) {
+        return new _playerSprite(moveSpeed, size, xPos, yPos, shipImage);
     };
     var createCollect = function(size, xPos, yPos, pointValue) {
         return new _edibleSprite(size, xPos, yPos, pointValue);

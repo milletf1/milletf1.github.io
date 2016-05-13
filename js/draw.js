@@ -7,11 +7,14 @@
     var PLAYER_START_X      = 400;
     var PLAYER_START_Y      = 300;
     var PLAYER_DEFAULT_MOVE = 12;
-    var SPRITE_SIZE         = 8;
-
-    var CANVAS_BG_COLOUR    = "white";
+    var SPRITE_SIZE         = 48;
+    var IMAGES_TO_LOAD      = 2;
+   
+    var PLAYER_SPRITE_IMAGE = "images/ship_base.svg";
+    var CANVAS_BG_IMAGE	    = "images/heic1107a.jpg";
+    var CANVAS_BG_COLOUR    = "black";
     var POINTS_FONT_STYLE   = "30px Arial";
-    var POINTS_FONT_COLOR   = "black";
+    var POINTS_FONT_COLOR   = "white";
     var END_GAME_FONT_STYLE = "30px Arial";
 
     var IN_GAME_STATE       = 1;
@@ -23,6 +26,9 @@
     var BOT                 = 2;
     var LEFT                = 3;
 
+    var loadedImages = 0;
+    var bgImage;
+    var shipImage;
     var gameState;
     var gameInterval;
     var edible;
@@ -32,7 +38,24 @@
     var ctx;
     $(document).ready(function() {
         
+	function loadImages() {
 
+            bgImage = new Image();
+            bgImage.src = CANVAS_BG_IMAGE;
+            bgImage.onload = imageOnLoad;
+     
+            shipImage = new Image();
+            shipImage.src = PLAYER_SPRITE_IMAGE;
+            shipImage.onload = imageOnLoad;
+	}
+
+        function imageOnLoad() {
+            loadedImages++;
+            
+            if(loadedImages == IMAGES_TO_LOAD) {
+                initInGameState();
+            }
+        }
         function generateEnemy() {
         
             var startSide = Math.floor(Math.random() * 4),
@@ -132,7 +155,7 @@
                 player.move();
             }
             // move enemies
-            for(var i = 0; i < enemies.length; i++) {
+            /*for(var i = 0; i < enemies.length; i++) {
 
                 if(enemies[i].getIsMoving()) {
                     enemies[i].move();
@@ -140,7 +163,7 @@
                 else {
                     enemies[i] = generateEnemy();
                 }
-            }
+            }*/
         }
         function drawPoints(points) {
             ctx.fillStyle = POINTS_FONT_COLOR;
@@ -149,30 +172,30 @@
             ctx.fillText("" + points, POINT_DISPLAY_X, POINT_DISPLAY_Y);
         }
 
-        function drawBackground() {
-
-            ctx.fillStyle = CANVAS_BG_COLOUR;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function drawBackground() {	    
+	  
+            ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+	    ctx.restore();
         }
  
         function drawInGameState() {
-
+	   
             // draw background
             drawBackground();
 
             // draw player points
-            drawPoints(player.getScore());
+           // drawPoints(player.getScore());
 
             // draw player
-            player.draw(ctx);
+            player.drawImg(ctx);
 
             // draw edibles
-            edible.draw(ctx);
+            //edible.draw(ctx);
             
             // draw enemies
-            enemies.forEach(function(enemy) {
-                enemy.draw(ctx);
-            });
+            //enemies.forEach(function(enemy) {
+            //    enemy.draw(ctx);
+            //});
         }
 
         function displayEndGame() { 
@@ -211,7 +234,7 @@
         
         function inGameStateLoop() {
             updateSprites();
-            checkCollisions();           
+            //checkCollisions();           
             drawInGameState();
             
             if(player.getIsAlive() === false) {                
@@ -223,6 +246,8 @@
         function canvasClickListener(event) {
             switch(gameState) {
                 case IN_GAME_STATE:
+			console.log(canvas.offsetLeft);
+			console.log(canvas.offsetTop);
                     var x = event.pageX - canvas.offsetLeft;
                     var y = event.pageY - canvas.offsetTop;
                     player.setMove(x, y);
@@ -235,34 +260,36 @@
             }
         }
 
-        function init() {
+        function initCanvas() {
             
             // init canvas
             canvas = document.getElementById('canvas');        
             ctx = canvas.getContext('2d');
-            canvas.addEventListener('click', canvasClickListener, false);
-            
-            initInGameState();
+            canvas.addEventListener('click', canvasClickListener, false);            
         }
 
         function initInGameState() {
             // init player
-            player = SpriteFactory.createPlayer(
-              PLAYER_DEFAULT_MOVE, SPRITE_SIZE, PLAYER_START_X, PLAYER_START_Y);
 
+            player = SpriteFactory.createPlayer(
+              PLAYER_DEFAULT_MOVE, 
+              SPRITE_SIZE, 
+              PLAYER_START_X, 
+              PLAYER_START_Y,
+              shipImage);
 
             // init edible
-            generateEdible();
+            //generateEdible();
 
             // init enemies
-            enemies = [];
-            enemies.push(generateEnemy());
+            //enemies = [];
+            //enemies.push(generateEnemy());
 
             gameState = IN_GAME_STATE;
-
-            // init timer
+	    // init timer	    
             gameInterval = setInterval(gameLoop, 50);
         }
-        init();
+	loadImages();
+        initCanvas();
     });
 })();
