@@ -8,10 +8,13 @@
     var PLAYER_START_Y      = 300;
     var PLAYER_DEFAULT_MOVE = 12;
     var SPRITE_SIZE         = 48;
-    var IMAGES_TO_LOAD      = 2;
-   
+    var IMAGES_TO_LOAD      = 3;
+
+    // game images   
+    var WIDGET_SPRITE_IMAGE = "images/crystal.svg";
     var PLAYER_SPRITE_IMAGE = "images/ship_base.svg";
     var CANVAS_BG_IMAGE	    = "images/heic1107a.jpg";
+
     var CANVAS_BG_COLOUR    = "black";
     var POINTS_FONT_STYLE   = "30px Arial";
     var POINTS_FONT_COLOR   = "white";
@@ -27,8 +30,11 @@
     var LEFT                = 3;
 
     var loadedImages = 0;
+
     var bgImage;
     var shipImage;
+    var widgetImage;
+
     var gameState;
     var gameInterval;
     var edible;
@@ -38,7 +44,10 @@
     var ctx;
     $(document).ready(function() {
         
-	function loadImages() {
+        /**
+         * sets image assets
+         */
+	    function loadImages() {
 
             bgImage = new Image();
             bgImage.src = CANVAS_BG_IMAGE;
@@ -47,8 +56,17 @@
             shipImage = new Image();
             shipImage.src = PLAYER_SPRITE_IMAGE;
             shipImage.onload = imageOnLoad;
-	}
+            
+            widgetImage = new Image();
+            widgetImage.src = WIDGET_SPRITE_IMAGE;
+            widgetImage.onload = imageOnLoad;
+        }
 
+        /**
+         * image on load function
+         * checks if all images have been loaded,
+         * and starts game if true.
+         */
         function imageOnLoad() {
             loadedImages++;
             
@@ -56,6 +74,10 @@
                 initInGameState();
             }
         }
+
+        /**
+         * creates a meteorite entity
+         */
         function generateEnemy() {
         
             var startSide = Math.floor(Math.random() * 4),
@@ -76,11 +98,17 @@
             
             return enemy;
         }
-
+        /**
+         * generates a random movement
+         * speed for a meteorite
+         */
         function getEnemySpeed() {
             return Math.floor(Math.random() * 8 + 4);
         }
     
+        /**
+         * generates a meteorite's starting x position
+         */
         function getEnemyXPos(posArgs) {
             
             var ret = null;
@@ -102,6 +130,9 @@
             return ret;
         }
 
+        /**
+         * generates a meteorite's starting y position
+         */
         function getEnemyYPos(posArgs) {
             
             var ret = null;
@@ -123,30 +154,44 @@
             return ret;
         }
 
+        /**
+         * generates a widget
+         */
         function generateEdible() {
         
             var newX = Math.floor(Math.random() * ( CANVAS_WIDTH - (SPRITE_SIZE * 2) ) ) + SPRITE_SIZE;
             var newY = Math.floor(Math.random() * ( CANVAS_HEIGHT - (SPRITE_SIZE * 2) ) ) + SPRITE_SIZE;
 
-            edible = SpriteFactory.createCollect(SPRITE_SIZE, newX, newY, EDIBLE_POINT);
+            edible = SpriteFactory.createCollect(
+                SPRITE_SIZE / 2, 
+                newX, 
+                newY, 
+                EDIBLE_POINT, 
+                widgetImage);
         }
 
+        /**
+         * checks sprite collision
+         */
         function checkCollisions() {
             // check player collision against collection item
             if(player.checkCollision(edible)) {
                 // todo: increment player points
                 player.incrementScore(edible.getPoints());
                 generateEdible();
-                enemies.push(generateEnemy());
+//                enemies.push(generateEnemy());
             }
             // check player collision against meteors
-            enemies.forEach(function(enemy) {
+            /*enemies.forEach(function(enemy) {
                 if(enemy.checkCollision(player)) {
                     player.setIsAlive(false); 
                 }
-            });
+            });*/
         }
 
+        /**
+         * updates position of the sprites
+         */
         function updateSprites() {
             // add/remove meteor if needed
 
@@ -165,6 +210,9 @@
                 }
             }*/
         }
+        /**
+         * displays player score
+         */
         function drawPoints(points) {
             ctx.fillStyle = POINTS_FONT_COLOR;
             ctx.font = POINTS_FONT_STYLE;
@@ -175,22 +223,25 @@
         function drawBackground() {	    
 	  
             ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-	    ctx.restore();
+	        ctx.restore();
         }
- 
+        
+        /**
+         * draw loop
+         */
         function drawInGameState() {
 	   
             // draw background
             drawBackground();
 
             // draw player points
-           // drawPoints(player.getScore());
+            drawPoints(player.getScore());
 
             // draw player
-            player.drawImg(ctx);
+            player.drawSprite(ctx);
 
             // draw edibles
-            //edible.draw(ctx);
+            edible.drawSprite(ctx);
             
             // draw enemies
             //enemies.forEach(function(enemy) {
@@ -198,6 +249,9 @@
             //});
         }
 
+        /**
+         * draws game over screen
+         */
         function displayEndGame() { 
 
             // draw background
@@ -215,6 +269,10 @@
             ctx.fillText("Click to play again", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
             clearInterval(gameInterval);
         }
+
+        /**
+         * main game loop  
+         */
         function gameLoop() {
             
             switch(gameState) {
@@ -231,10 +289,12 @@
             }
         }
 
-        
+        /**
+         * loop that runs while a game is active
+         */
         function inGameStateLoop() {
             updateSprites();
-            //checkCollisions();           
+            checkCollisions();           
             drawInGameState();
             
             if(player.getIsAlive() === false) {                
@@ -243,11 +303,13 @@
             }
         };
 
+        /**
+         * canvas on click listener
+         */
         function canvasClickListener(event) {
+
             switch(gameState) {
                 case IN_GAME_STATE:
-			console.log(canvas.offsetLeft);
-			console.log(canvas.offsetTop);
                     var x = event.pageX - canvas.offsetLeft;
                     var y = event.pageY - canvas.offsetTop;
                     player.setMove(x, y);
@@ -260,6 +322,9 @@
             }
         }
 
+        /**
+         * initializes game canvas
+         */
         function initCanvas() {
             
             // init canvas
@@ -268,9 +333,12 @@
             canvas.addEventListener('click', canvasClickListener, false);            
         }
 
+        /**
+         * initializes in game state
+         */
         function initInGameState() {
+           
             // init player
-
             player = SpriteFactory.createPlayer(
               PLAYER_DEFAULT_MOVE, 
               SPRITE_SIZE, 
@@ -279,17 +347,18 @@
               shipImage);
 
             // init edible
-            //generateEdible();
+            generateEdible();
 
             // init enemies
             //enemies = [];
             //enemies.push(generateEnemy());
 
             gameState = IN_GAME_STATE;
-	    // init timer	    
+
+	        // init timer	    
             gameInterval = setInterval(gameLoop, 50);
         }
-	loadImages();
+	    loadImages();
         initCanvas();
     });
 })();

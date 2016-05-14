@@ -7,13 +7,14 @@ var SpriteFactory = (function () {
     /**
      * Base sprite
      */
-    function _baseSprite(bgColor, size, xPos, yPos) {    
-        this.bgColor = bgColor;
+    function _baseSprite(size, xPos, yPos, spriteImage) {        
         this.size = size;        
         this.xPos = xPos;
         this.yPos = yPos;
-    }
-    
+        this.spriteImg = spriteImage;
+    }    
+    _baseSprite.prototype.constructor = _baseSprite;
+
     _baseSprite.prototype.getXPos = function() {
         return this.xPos;
     };
@@ -34,48 +35,90 @@ var SpriteFactory = (function () {
         return this.size;
     };
 
-    _baseSprite.prototype.checkCollision = function(otherSprite) {
-   	// todo implement pixel collision 
-        var dx = this.xPos - otherSprite.getXPos(),
-            dy = this.yPos - otherSprite.getYPos();
-        var dist = Math.sqrt(dx * dx + dy * dy);
-
-        return dist < this.size + otherSprite.getSize()
+    _baseSprite.prototype.drawSprite = function(ctx) {
+        ctx.drawImage(this.spriteImg, this.xPos, this.yPos, this.size, this.size);	   	   
     };
 
-    _baseSprite.prototype.draw = function(ctx) {
-        var path = new Path2D();
-        path.arc(this.xPos, this.yPos, this.size, 0, Math.PI * 2, false);
-        ctx.fillStyle = this.bgColor;
-        ctx.fill(path);
+    _baseSprite.prototype.getImage = function() {
+        return this.spriteImg;
     };
-    
-    
-    _baseSprite.prototype.constructor = _baseSprite;
 
+    _baseSprite.prototype.getImageData = function() {
+
+        var canvas = document.createElement("canvas");
+        canvas.width = this.size;
+        canvas.height = this.size;
+
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(this.spriteImg, 0, 0, this.size, this.size);
+
+        return ctx.getImageData(0, 0, canvas.width, canvas.height).data;        
+    }
+
+    _baseSprite.prototype.checkCollision = function(otherSprite, bgImage) {
+
+        var thisX = Math.round(this.xPos);
+        var thisY = Math.round(this.yPos);
+        var otherX = Math.round(otherSprite.getXPos());
+        var otherY = Math.round(otherSprite.getYPos());
+
+        // find top left and bottom right corners of overlap
+        var xMin = Math.max(thisX, otherX),
+            yMin = Math.max(thisY, otherY),
+            xMax = Math.min(thisX + this.size, otherX + otherSprite.getSize()),
+            yMax = Math.min(thisY + this.size, otherY + otherSprite.getSize());
+        
+        // return false if there is not an overlap
+        if(xMin >= xMax || yMin >= yMax) {
+            return false;
+        }
+
+        // perform collision check        
+        var pixelsThis = this.getImageData();
+        var pixelsOther = otherSprite.getImageData();
+
+        for(var pX = xMin; pX < xMax; pX++) {
+            for(var pY = yMin; pY < yMax; pY++) {               
+
+                // translate pixel location                
+                var pixel1 = ((pX - thisX) + (pY - thisY) * this.size) * 4 + 3;
+                var pixel2 = ((pX - otherX) + (pY - otherY) * otherSprite.getSize()) * 4 + 3;
+                              
+                if(pixelsThis[pixel1] !== 0 && pixelsOther[pixel2] !== 0) {
+                    return true;
+                }        
+            }
+        }
+        return false;
+    };
+
+     
     /**
      * Edible sprite
      */
-    function _edibleSprite(size, xPos, yPos, pointValue) {
-        _baseSprite.call(this, EAT_COLOUR, size, xPos, yPos);
+    function _edibleSprite(size, xPos, yPos, pointValue, spriteImage) {
+        _baseSprite.call(this, size, xPos, yPos, spriteImage);
+
         this.pointValue = pointValue;
     };
     _edibleSprite.prototype = Object.create(_baseSprite.prototype);
+
     _edibleSprite.prototype.getPoints = function() {
         return this.pointValue;
     };
+
     /**
      * Movable sprite
      */
-    function _movableSprite(moveSpeed, bgColor, size, xPos, yPos) {
-        _baseSprite.call(this, bgColor, size, xPos, yPos);
+    function _movableSprite(moveSpeed, size, xPos, yPos, spriteImage) {
+        _baseSprite.call(this, size, xPos, yPos, spriteImage);
+
         this.moveSpeed = moveSpeed;
-	this.size = 48;
         this.xTarget = xPos;
         this.yTarget = yPos;
         this.isMoving = false;
-	this.xOffset = 0;
-	this.yOffset = 0;
+	    this.xOffset = 0;
+    	this.yOffset = 0;
     };
     _movableSprite.prototype = Object.create(_baseSprite.prototype);
 
@@ -125,14 +168,12 @@ var SpriteFactory = (function () {
      * Player sprite
      */
     function _playerSprite(moveSpeed, size, xPos, yPos, spriteImage) {
-        _movableSprite.call(this, moveSpeed, PLAYER_COLOUR, size, xPos, yPos);         
- 	this.points = 0;
+        _movableSprite.call(this, moveSpeed, size, xPos, yPos, spriteImage);         
+ 	
+        this.points = 0;
         this.isAlive = true;
-	this.spriteImg = spriteImage;	// todo: sort this out in base sprite
-//	this.spriteImg.src = "images/ship_base.svg";	
-	//todo real sprite size;
-	this.xOffset = size/2;
-	this.yOffset = size/2;
+    	this.xOffset = size/2;
+    	this.yOffset = size/2;
     };
     _playerSprite.prototype = Object.create(_movableSprite.prototype);
 
@@ -150,10 +191,10 @@ var SpriteFactory = (function () {
         this.points += points;
     };
     
-    _playerSprite.prototype.drawImg = function(ctx) {
-	ctx.save();
+    _playerSprite.prototype.drawSprite = function(ctx) {
+        ctx.save();
 
-	// set translate
+	    // set translate
         var x = this.xPos + this.xOffset;
         var y = this.yPos + this.yOffset;
         ctx.translate(x , y);
@@ -166,9 +207,38 @@ var SpriteFactory = (function () {
         ctx.rotate(rot);
      
         ctx.drawImage(this.spriteImg, -this.xOffset, -this.yOffset, this.size, this.size);	   
-	ctx.restore();
+    
+    	ctx.restore();
     };
     
+    _playerSprite.prototype.getImageData = function() {
+
+        var canvas = document.createElement("canvas");
+        canvas.width = this.size;
+        canvas.height = this.size;
+
+        var ctx = canvas.getContext("2d");
+       
+        ctx.save();
+
+	    // set translate
+        var x = this.xOffset;
+        var y = this.yOffset;
+        ctx.translate(x , y);
+     
+        // set rotation
+        var deltaX = this.xTarget - this.xPos;
+        var deltaY = this.yTarget - this.yPos;
+        var rot = Math.atan2(deltaY, deltaX);
+     
+        ctx.rotate(rot);
+     
+        ctx.drawImage(this.spriteImg, -this.xOffset, -this.yOffset, this.size, this.size);	   
+    
+    	ctx.restore();
+        
+        return ctx.getImageData(0, 0, canvas.width, canvas.height).data;        
+    }
     /**
      * Enemy sprite
      */
@@ -183,9 +253,10 @@ var SpriteFactory = (function () {
     var createPlayer = function(moveSpeed, size, xPos, yPos, shipImage) {
         return new _playerSprite(moveSpeed, size, xPos, yPos, shipImage);
     };
-    var createCollect = function(size, xPos, yPos, pointValue) {
-        return new _edibleSprite(size, xPos, yPos, pointValue);
+    var createCollect = function(size, xPos, yPos, pointValue, spriteImage) {
+        return new _edibleSprite(size, xPos, yPos, pointValue, spriteImage);
     };
+
     var createEnemy = function(moveSpeed, size, xPos, yPos) {
         return new _enemySprite(moveSpeed, size, xPos, yPos);
     };
