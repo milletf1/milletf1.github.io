@@ -26,9 +26,11 @@
     var POINTS_FONT_COLOR               = "white";
     var END_GAME_FONT_STYLE             = "30px Arial";
 
+    // game states
+    var GAME_TITLE_STATE                = 0;
     var IN_GAME_STATE                   = 1;
     var GAME_OVER_STATE                 = 2;
-
+    
     // start/end position of enemy sprites
     var TOP                             = 0;
     var RIGHT                           = 1;
@@ -82,7 +84,7 @@
             loadedImages++;
             
             if(loadedImages == IMAGES_TO_LOAD) {
-                initInGameState();
+                initGame();
             }
         }
         /**
@@ -262,9 +264,39 @@
         }
 
         /**
+         * draw title screen
+         */
+        function displayTitleScreen() {
+
+            // draw background
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // setup text
+            ctx.fillStyle = "white";
+            ctx.font = "24px Arial";
+            ctx.textAlign = "left";
+
+            var xPos = canvas.width / 4;
+            var xPosText = xPos + 100;
+            var yPos = canvas.height / 5;
+
+            // draw spaceship
+            ctx.drawImage(shipImage, xPos, yPos, 72, 72);
+            ctx.fillText("You are a spaceship", xPosText, yPos + 40);
+            // draw widget
+            ctx.drawImage(widgetImage, xPos, yPos * 2, 72, 72);
+            ctx.fillText("Collect the space widgets", xPosText, yPos * 2 + 40);
+            //draw asteroid
+            ctx.drawImage(asteroidImage, xPos, yPos * 3, 72, 72);
+            ctx.fillText("Avoid the asteroids", xPosText, yPos * 3 + 40);
+        }
+
+        /**
          * draws game over screen
          */
-        function displayEndGame() { 
+        function displayEndGame() {
+            clearInterval(gameInterval);
 
             // draw background
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
@@ -279,7 +311,6 @@
             // draw click to continue
             ctx.font = "18px Arial";
             ctx.fillText("Click to play again", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-            clearInterval(gameInterval);
         }
 
         /**
@@ -288,11 +319,13 @@
         function gameLoop() {
             
             switch(gameState) {
-                /*
+                case GAME_TITLE_STATE:
+                    displayTitleScreen();
+                    break; 
                 case GAME_OVER_STATE:
                     displayEndGame();
                     break;
-                */
+                
                 case IN_GAME_STATE:
                     inGameStateLoop();
                     break;
@@ -311,7 +344,6 @@
             
             if(player.getIsAlive() === false) {                
                 gameState = GAME_OVER_STATE;
-                displayEndGame();
             }
         };
 
@@ -326,6 +358,8 @@
                     var y = event.pageY - canvas.offsetTop;
                     player.setMove(x, y);
                     break;
+                case GAME_TITLE_STATE:
+                    
                 case GAME_OVER_STATE:
                     initInGameState();
                     break; 
@@ -343,6 +377,11 @@
             canvas = document.getElementById('canvas');        
             ctx = canvas.getContext('2d');
             canvas.addEventListener('click', canvasClickListener, false);            
+        }
+
+        function initGame() {
+            gameState = GAME_TITLE_STATE;
+            displayTitleScreen();
         }
 
         /**
@@ -366,10 +405,8 @@
             enemies.push(generateEnemy());
 
             gameState = IN_GAME_STATE;
-
-	        // init timer	    
             gameInterval = setInterval(gameLoop, 50);
-        }
+        }        
 	    loadImages();
         initCanvas();
     });
