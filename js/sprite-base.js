@@ -242,8 +242,8 @@ var SpriteFactory = (function () {
     /**
      * Enemy sprite
      */
-    function _enemySprite(moveSpeed, size, xPos, yPos) {
-        _movableSprite.call(this, moveSpeed, ENEMY_COLOUR, size, xPos, yPos);   
+    function _enemySprite(moveSpeed, size, xPos, yPos, spriteImage) {
+        _movableSprite.call(this, moveSpeed, size, xPos, yPos, spriteImage);   
     };
     _enemySprite.prototype = Object.create(_movableSprite.prototype);
 
@@ -257,8 +257,8 @@ var SpriteFactory = (function () {
         return new _edibleSprite(size, xPos, yPos, pointValue, spriteImage);
     };
 
-    var createEnemy = function(moveSpeed, size, xPos, yPos) {
-        return new _enemySprite(moveSpeed, size, xPos, yPos);
+    var createEnemy = function(moveSpeed, size, xPos, yPos, spriteImage) {
+        return new _enemySprite(moveSpeed, size, xPos, yPos, spriteImage);
     };
 
     return {

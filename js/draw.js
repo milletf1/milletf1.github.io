@@ -1,39 +1,42 @@
 (function() {
-    var EDIBLE_POINT        = 10;
-    var POINT_DISPLAY_X     = 20;
-    var POINT_DISPLAY_Y     = 40;
-    var CANVAS_WIDTH        = 800;
-    var CANVAS_HEIGHT       = 600;
-    var PLAYER_START_X      = 400;
-    var PLAYER_START_Y      = 300;
-    var PLAYER_DEFAULT_MOVE = 12;
-    var SPRITE_SIZE         = 48;
-    var IMAGES_TO_LOAD      = 3;
+    var EDIBLE_POINT            = 10;
+    var POINT_DISPLAY_X         = 20;
+    var POINT_DISPLAY_Y         = 40;
+    var CANVAS_WIDTH            = 800;
+    var CANVAS_HEIGHT           = 600;
+    var PLAYER_START_X          = 400;
+    var PLAYER_START_Y          = 300;
+    var PLAYER_DEFAULT_MOVE     = 12;
+    var SPRITE_SIZE             = 48;
+    var IMAGES_TO_LOAD          = 4;
 
     // game images   
-    var WIDGET_SPRITE_IMAGE = "images/crystal.svg";
-    var PLAYER_SPRITE_IMAGE = "images/ship_base.svg";
-    var CANVAS_BG_IMAGE	    = "images/heic1107a.jpg";
+    var WIDGET_SPRITE_IMAGE     = "images/crystal.svg";
+    var PLAYER_SPRITE_IMAGE     = "images/ship_base.svg";
+    var ASTEROID_SPRITE_IMAGE   = "images/Asteroid-A-10-44.png";
+    var CANVAS_BG_IMAGE	        = "images/heic1107a.jpg";
 
-    var CANVAS_BG_COLOUR    = "black";
-    var POINTS_FONT_STYLE   = "30px Arial";
-    var POINTS_FONT_COLOR   = "white";
-    var END_GAME_FONT_STYLE = "30px Arial";
 
-    var IN_GAME_STATE       = 1;
-    var GAME_OVER_STATE     = 2;
+    var CANVAS_BG_COLOUR        = "black";
+    var POINTS_FONT_STYLE       = "30px Arial";
+    var POINTS_FONT_COLOR       = "white";
+    var END_GAME_FONT_STYLE     = "30px Arial";
+
+    var IN_GAME_STATE           = 1;
+    var GAME_OVER_STATE         = 2;
 
     // start/end position of enemy sprites
-    var TOP                 = 0;
-    var RIGHT               = 1;
-    var BOT                 = 2;
-    var LEFT                = 3;
+    var TOP                     = 0;
+    var RIGHT                   = 1;
+    var BOT                     = 2;
+    var LEFT                    = 3;
 
     var loadedImages = 0;
 
     var bgImage;
     var shipImage;
     var widgetImage;
+    var asteroidImage;
 
     var gameState;
     var gameInterval;
@@ -60,6 +63,10 @@
             widgetImage = new Image();
             widgetImage.src = WIDGET_SPRITE_IMAGE;
             widgetImage.onload = imageOnLoad;
+
+            asteroidImage = new Image();
+            asteroidImage.src = ASTEROID_SPRITE_IMAGE;
+            asteroidImage.onload = imageOnLoad;
         }
 
         /**
@@ -91,9 +98,10 @@
                 yStart = getEnemyYPos(startSide),
                 xEnd = getEnemyXPos(endSide),
                 yEnd = getEnemyYPos(endSide),
-                moveSpeed = getEnemySpeed();
-
-            var enemy = SpriteFactory.createEnemy(moveSpeed, SPRITE_SIZE, xStart, yStart);
+                moveSpeed = getEnemySpeed(),
+                spriteSize = SPRITE_SIZE + Math.floor(Math.random() * 24 - 9) ;
+    
+            var enemy = SpriteFactory.createEnemy(moveSpeed, spriteSize, xStart, yStart, asteroidImage);
             enemy.setMove(xEnd, yEnd);
             
             return enemy;
@@ -179,14 +187,14 @@
                 // todo: increment player points
                 player.incrementScore(edible.getPoints());
                 generateEdible();
-//                enemies.push(generateEnemy());
+                enemies.push(generateEnemy());
             }
             // check player collision against meteors
-            /*enemies.forEach(function(enemy) {
+            enemies.forEach(function(enemy) {
                 if(enemy.checkCollision(player)) {
                     player.setIsAlive(false); 
                 }
-            });*/
+            });
         }
 
         /**
@@ -200,7 +208,7 @@
                 player.move();
             }
             // move enemies
-            /*for(var i = 0; i < enemies.length; i++) {
+            for(var i = 0; i < enemies.length; i++) {
 
                 if(enemies[i].getIsMoving()) {
                     enemies[i].move();
@@ -208,7 +216,7 @@
                 else {
                     enemies[i] = generateEnemy();
                 }
-            }*/
+            }
         }
         /**
          * displays player score
@@ -244,9 +252,9 @@
             edible.drawSprite(ctx);
             
             // draw enemies
-            //enemies.forEach(function(enemy) {
-            //    enemy.draw(ctx);
-            //});
+            enemies.forEach(function(enemy) {
+                enemy.drawSprite(ctx);
+            });
         }
 
         /**
@@ -350,8 +358,8 @@
             generateEdible();
 
             // init enemies
-            //enemies = [];
-            //enemies.push(generateEnemy());
+            enemies = [];
+            enemies.push(generateEnemy());
 
             gameState = IN_GAME_STATE;
 
