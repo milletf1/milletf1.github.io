@@ -117,8 +117,8 @@ var SpriteFactory = (function () {
         this.xTarget = xPos;
         this.yTarget = yPos;
         this.isMoving = false;
-	    this.xOffset = 0;
-    	this.yOffset = 0;
+    	this.xOffset = size/2;
+    	this.yOffset = size/2;
     };
     _movableSprite.prototype = Object.create(_baseSprite.prototype);
 
@@ -172,8 +172,6 @@ var SpriteFactory = (function () {
  	
         this.points = 0;
         this.isAlive = true;
-    	this.xOffset = size/2;
-    	this.yOffset = size/2;
     };
     _playerSprite.prototype = Object.create(_movableSprite.prototype);
 
@@ -242,10 +240,36 @@ var SpriteFactory = (function () {
     /**
      * Enemy sprite
      */
-    function _enemySprite(moveSpeed, size, xPos, yPos, spriteImage) {
+    function _enemySprite(moveSpeed, size, xPos, yPos, spriteImage, rotationSpeed) {
         _movableSprite.call(this, moveSpeed, size, xPos, yPos, spriteImage);   
+
+        this.rotSpeed = rotationSpeed;
+        this.rot = 0;
     };
     _enemySprite.prototype = Object.create(_movableSprite.prototype);
+
+    _enemySprite.prototype.move = function() {
+         _movableSprite.prototype.move.call(this);
+
+        this.rot += this.rotSpeed;
+        this.rot = this.rot % 360;
+    };
+
+    _enemySprite.prototype.drawSprite = function(ctx) {
+        ctx.save();
+        
+	    // set translate
+        var x = this.xPos + this.xOffset;
+        var y = this.yPos + this.yOffset;
+        ctx.translate(x , y);
+     
+        // set rotation     
+        ctx.rotate(this.rot * Math.PI/180);
+     
+        ctx.drawImage(this.spriteImg, -this.xOffset, -this.yOffset, this.size, this.size);	   
+    
+    	ctx.restore();
+    };
 
     /**
      * Factory
@@ -257,8 +281,8 @@ var SpriteFactory = (function () {
         return new _edibleSprite(size, xPos, yPos, pointValue, spriteImage);
     };
 
-    var createEnemy = function(moveSpeed, size, xPos, yPos, spriteImage) {
-        return new _enemySprite(moveSpeed, size, xPos, yPos, spriteImage);
+    var createEnemy = function(moveSpeed, size, xPos, yPos, spriteImage, rotationSpeed) {
+        return new _enemySprite(moveSpeed, size, xPos, yPos, spriteImage, rotationSpeed);
     };
 
     return {

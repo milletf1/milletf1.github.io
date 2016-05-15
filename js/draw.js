@@ -1,35 +1,39 @@
 (function() {
-    var EDIBLE_POINT            = 10;
-    var POINT_DISPLAY_X         = 20;
-    var POINT_DISPLAY_Y         = 40;
-    var CANVAS_WIDTH            = 800;
-    var CANVAS_HEIGHT           = 600;
-    var PLAYER_START_X          = 400;
-    var PLAYER_START_Y          = 300;
-    var PLAYER_DEFAULT_MOVE     = 12;
-    var SPRITE_SIZE             = 48;
-    var IMAGES_TO_LOAD          = 4;
+    var EDIBLE_POINT                    = 10;
+    var POINT_DISPLAY_X                 = 20;
+    var POINT_DISPLAY_Y                 = 40;
+    var CANVAS_WIDTH                    = 800;
+    var CANVAS_HEIGHT                   = 600;
+    var PLAYER_START_X                  = 400;
+    var PLAYER_START_Y                  = 300;
+    var PLAYER_DEFAULT_MOVE             = 12;
+    var SPRITE_SIZE                     = 48;
+    var IMAGES_TO_LOAD                  = 4;
 
+    var ENEMY_SPRITE_SIZE_MOD           = 24;
+    var ENEMY_SPRITE_SIZE_BASE          = 24;
+    var ENEMY_SPEED_BASE                = 8;
+    var ENEMY_SPEED_MOD                 = 4;
     // game images   
-    var WIDGET_SPRITE_IMAGE     = "images/crystal.svg";
-    var PLAYER_SPRITE_IMAGE     = "images/ship_base.svg";
-    var ASTEROID_SPRITE_IMAGE   = "images/Asteroid-A-10-44.png";
-    var CANVAS_BG_IMAGE	        = "images/heic1107a.jpg";
+    var WIDGET_SPRITE_IMAGE             = "images/crystal.svg";
+    var PLAYER_SPRITE_IMAGE             = "images/ship_base.svg";
+    var ASTEROID_SPRITE_IMAGE           = "images/asteroid.svg";
+    var CANVAS_BG_IMAGE	                = "images/heic1107a.jpg";
 
 
-    var CANVAS_BG_COLOUR        = "black";
-    var POINTS_FONT_STYLE       = "30px Arial";
-    var POINTS_FONT_COLOR       = "white";
-    var END_GAME_FONT_STYLE     = "30px Arial";
+    var CANVAS_BG_COLOUR                = "black";
+    var POINTS_FONT_STYLE               = "30px Arial";
+    var POINTS_FONT_COLOR               = "white";
+    var END_GAME_FONT_STYLE             = "30px Arial";
 
-    var IN_GAME_STATE           = 1;
-    var GAME_OVER_STATE         = 2;
+    var IN_GAME_STATE                   = 1;
+    var GAME_OVER_STATE                 = 2;
 
     // start/end position of enemy sprites
-    var TOP                     = 0;
-    var RIGHT                   = 1;
-    var BOT                     = 2;
-    var LEFT                    = 3;
+    var TOP                             = 0;
+    var RIGHT                           = 1;
+    var BOT                             = 2;
+    var LEFT                            = 3;
 
     var loadedImages = 0;
 
@@ -81,7 +85,6 @@
                 initInGameState();
             }
         }
-
         /**
          * creates a meteorite entity
          */
@@ -94,14 +97,16 @@
                 endSide = (Math.floor( (Math.random() * 3) + 1 )) % 4;
             }
 
-            var xStart = getEnemyXPos(startSide),
-                yStart = getEnemyYPos(startSide),
-                xEnd = getEnemyXPos(endSide),
-                yEnd = getEnemyYPos(endSide),
-                moveSpeed = getEnemySpeed(),
-                spriteSize = SPRITE_SIZE + Math.floor(Math.random() * 24 - 9) ;
+            var spriteSize = SPRITE_SIZE + Math.floor(Math.random() * ENEMY_SPRITE_SIZE_BASE - ENEMY_SPRITE_SIZE_MOD),
+                rotationSpeed = Math.floor(Math.random() * 30),
+                xStart = getEnemyXPos(startSide, spriteSize),
+                yStart = getEnemyYPos(startSide, spriteSize),
+                xEnd = getEnemyXPos(endSide, spriteSize),
+                yEnd = getEnemyYPos(endSide, spriteSize),
+                moveSpeed = getEnemySpeed();
     
-            var enemy = SpriteFactory.createEnemy(moveSpeed, spriteSize, xStart, yStart, asteroidImage);
+            var enemy = SpriteFactory.createEnemy(moveSpeed, spriteSize, xStart, yStart, 
+                    asteroidImage, rotationSpeed);
             enemy.setMove(xEnd, yEnd);
             
             return enemy;
@@ -111,26 +116,25 @@
          * speed for a meteorite
          */
         function getEnemySpeed() {
-            return Math.floor(Math.random() * 8 + 4);
+            return Math.floor(Math.random() * ENEMY_SPEED_BASE + ENEMY_SPEED_MOD);
         }
-    
         /**
          * generates a meteorite's starting x position
          */
-        function getEnemyXPos(posArgs) {
+        function getEnemyXPos(posArgs, spriteSize) {
             
             var ret = null;
 
             switch(posArgs) {
                 case TOP:
                 case BOT:
-                    ret = Math.floor(Math.random() * (CANVAS_WIDTH - SPRITE_SIZE) + (SPRITE_SIZE / 2));
+                    ret = Math.floor(Math.random() * (CANVAS_WIDTH - spriteSize) + (spriteSize / 2));
                     break;
                 case RIGHT:
-                    ret = SPRITE_SIZE / 2 + CANVAS_WIDTH;
+                    ret = spriteSize / 2 + CANVAS_WIDTH;
                     break;
                 case LEFT:
-                    ret = SPRITE_SIZE / 2 * -1;
+                    ret = spriteSize / 2 * -1;
                     break;
                 default:
                     break;
@@ -141,20 +145,20 @@
         /**
          * generates a meteorite's starting y position
          */
-        function getEnemyYPos(posArgs) {
+        function getEnemyYPos(posArgs, spriteSize) {
             
             var ret = null;
 
             switch(posArgs) {
                 case TOP:
-                    ret = SPRITE_SIZE / 2 * -1;
+                    ret = spriteSize / 2 * -1;
                     break;
                 case BOT:
-                    ret = SPRITE_SIZE / 2 + CANVAS_HEIGHT;
+                    ret = spriteSize / 2 + CANVAS_HEIGHT;
                     break;
                 case LEFT:
                 case RIGHT:
-                    ret = Math.floor(Math.random() * (CANVAS_HEIGHT - SPRITE_SIZE) + (SPRITE_SIZE / 2));
+                    ret = Math.floor(Math.random() * (CANVAS_HEIGHT - spriteSize) + (spriteSize / 2));
                     break;
                 default:
                     break;
